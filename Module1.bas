@@ -2,20 +2,20 @@ Attribute VB_Name = "Module1"
 Option Explicit
 
 '-------------------------------------------------------------------------------
-' OneDriveã‚ÌVBA‚ÅThisWorkbook.Path‚ªURL‚ğ•Ô‚·–â‘è‚ğ‰ğŒˆ‚·‚é
-' Å‹ßŠJ‚¢‚½€–Ú‚©‚çƒ[ƒJƒ‹ƒpƒX‚ğæ“¾‚·‚é
-' Resolve problem with ThisWorkbook.Path returning URL in VBA on OneDrive.
+' OneDriveä¸Šã®VBAã§ActiveDocument.PathãŒURLã‚’è¿”ã™å•é¡Œã‚’è§£æ±ºã™ã‚‹
+' æœ€è¿‘é–‹ã„ãŸé …ç›®ã‹ã‚‰ãƒ­ãƒ¼ã‚«ãƒ«ãƒ‘ã‚¹ã‚’å–å¾—ã™ã‚‹
+' Resolve problem with ActiveDocument.Path returning URL in VBA on OneDrive.
 ' Get local path from recently opened items.
 '
 ' Arguments: Nothing
 '
 ' Return Value:
-'   Local Path of ThisWorkbook (String)
+'   Local Path of ActiveDocument (String)
 '   Return null string if fails conversion from URL path to local path.
 '
 ' Usage:
 '   Dim lp As String
-'   lp = GetThisWorkbookLocalPath2
+'   lp = GetActiveDocumentLocalPath2
 '
 ' Author: Excel VBA Diary (@excelvba_diary)
 ' Created: December 11, 2023
@@ -24,19 +24,19 @@ Option Explicit
 ' License: MIT
 '-------------------------------------------------------------------------------
 
-Public Function GetThisWorkbookLocalPath1() As String
+Public Function GetActiveDocumentLocalPath1() As String
     
-    If Not ThisWorkbook.Path Like "http*" Then
-        GetThisWorkbookLocalPath1 = ThisWorkbook.Path
+    If Not ActiveDocument.Path Like "http*" Then
+        GetActiveDocumentLocalPath1 = ActiveDocument.Path
         Exit Function
     End If
     
-    'Šù‚Éæ“¾Ï‚İ‚Å‚ ‚ê‚ÎAæ“¾Ï‚İ‚Ì’l‚ğ•Ô‚·
+    'æ—¢ã«å–å¾—æ¸ˆã¿ã§ã‚ã‚Œã°ã€å–å¾—æ¸ˆã¿ã®å€¤ã‚’è¿”ã™
     'If it has already been retrieved, the retrieved value is returned.
     
     Static myLocalPathCache As String, lastUpdated As Date
     If myLocalPathCache <> "" And Now() - lastUpdated <= 30 / 86400 Then
-        GetThisWorkbookLocalPath1 = myLocalPathCache
+        GetActiveDocumentLocalPath1 = myLocalPathCache
         Exit Function
     End If
     
@@ -47,10 +47,10 @@ Public Function GetThisWorkbookLocalPath1() As String
     recentFolderPath = Environ("USERPROFILE") & "\AppData\Roaming\Microsoft\Windows\Recent\"
     
     Dim baseName As String, lnkFilePath As String
-    baseName = fso.GetBaseName(ThisWorkbook.Name)
+    baseName = fso.GetBaseName(ActiveDocument.Name)
     Select Case True
-        Case fso.FileExists(recentFolderPath & ThisWorkbook.Name & ".LNK")
-            lnkFilePath = recentFolderPath & ThisWorkbook.Name & ".LNK"
+        Case fso.FileExists(recentFolderPath & ActiveDocument.Name & ".LNK")
+            lnkFilePath = recentFolderPath & ActiveDocument.Name & ".LNK"
         Case fso.FileExists(recentFolderPath & baseName & ".LNK")
             lnkFilePath = recentFolderPath & baseName & ".LNK"
         Case Else
@@ -61,20 +61,20 @@ Public Function GetThisWorkbookLocalPath1() As String
     Dim filePath As String
     filePath = CreateObject("WScript.Shell").CreateShortcut(lnkFilePath).TargetPath
     
-    'ÀÛ‚Éƒtƒ@ƒCƒ‹‚ª‘¶İ‚·‚é‚©Šm”F‚·‚é
+    'å®Ÿéš›ã«ãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã™ã‚‹ã‹ç¢ºèªã™ã‚‹
     'Verify that the file actually exists
     
     If Not fso.FileExists(filePath) Then Exit Function
     myLocalPathCache = fso.GetParentFolderName(filePath)
     lastUpdated = Now()
-    GetThisWorkbookLocalPath1 = myLocalPathCache
+    GetActiveDocumentLocalPath1 = myLocalPathCache
         
 End Function
 
 
 '-------------------------------------------------------------------------------
-' ŒÂl—pİ’è‚ÌuƒXƒ^[ƒgv‚Ìu`Å‹ßŠJ‚¢‚½€–Ú‚ğ•\¦‚·‚év‚Ìİ’è’l‚ğ•Ô‚·
-' –ß‚è’lF  Fase=•\¦‚µ‚È‚¢ATrue=•\¦‚·‚é
+' å€‹äººç”¨è¨­å®šã®ã€Œã‚¹ã‚¿ãƒ¼ãƒˆã€ã®ã€Œï½æœ€è¿‘é–‹ã„ãŸé …ç›®ã‚’è¡¨ç¤ºã™ã‚‹ã€ã®è¨­å®šå€¤ã‚’è¿”ã™
+' æˆ»ã‚Šå€¤ï¼š  Fase=è¡¨ç¤ºã—ãªã„ã€True=è¡¨ç¤ºã™ã‚‹
 ' Returns the value of the "Show Recently Opened Items" setting in "Start" of personal settings.
 ' Return value: Fase=Do not display, True=display
 '-------------------------------------------------------------------------------
@@ -91,16 +91,16 @@ End Function
 
 
 '-------------------------------------------------------------------------------
-' ƒeƒXƒgƒR[ƒh
-' Test code for GetThisWorkbookLocalPath1
+' ãƒ†ã‚¹ãƒˆã‚³ãƒ¼ãƒ‰
+' Test code for GetActiveDocumentLocalPath1
 '-------------------------------------------------------------------------------
-Private Sub Test_GetThisWorkbookLocalPath1()
-    Debug.Print "URL Path", ThisWorkbook.Path
-    Debug.Print "Local Path", GetThisWorkbookLocalPath1
+Private Sub Test_GetActiveDocumentLocalPath1()
+    Debug.Print "URL Path", ActiveDocument.Path
+    Debug.Print "Local Path", GetActiveDocumentLocalPath1
 End Sub
 
 
 '-------------------------------------------------------------------------------
-' ‚±‚Ìƒ‚ƒWƒ…[ƒ‹‚Í‚±‚±‚ÅI‚í‚è
+' ã“ã®ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã¯ã“ã“ã§çµ‚ã‚ã‚Š
 ' The script for this module ends here
 '-------------------------------------------------------------------------------
