@@ -94,7 +94,7 @@ End Function
 ' テストコード
 ' Test code for GetActiveDocumentLocalPath1
 '-------------------------------------------------------------------------------
-Private Sub Test_GetActiveDocumentLocalPath1()
+Sub Test_GetActiveDocumentLocalPath1()
     Debug.Print "URL Path", ActiveDocument.Path
     Debug.Print "Local Path", GetActiveDocumentLocalPath1
 End Sub
