@@ -2,20 +2,20 @@ Attribute VB_Name = "Module2"
 Option Explicit
 
 '-------------------------------------------------------------------------------
-' OneDriveã‚ÌVBA‚ÅThisWorkbook.Path‚ªURL‚ğ•Ô‚·–â‘è‚ğ‰ğŒˆ‚·‚é
-' ŠJ‚¢‚Ä‚¢‚éƒGƒNƒXƒvƒ[ƒ‰‚©‚çƒ[ƒJƒ‹ƒpƒX‚ğæ“¾‚·‚é
-' Resolve problem with ThisWorkbook.Path returning URL in VBA on OneDrive.
+' OneDriveä¸Šã®VBAã§ActiveDocument.PathãŒURLã‚’è¿”ã™å•é¡Œã‚’è§£æ±ºã™ã‚‹
+' é–‹ã„ã¦ã„ã‚‹ã‚¨ã‚¯ã‚¹ãƒ—ãƒ­ãƒ¼ãƒ©ã‹ã‚‰ãƒ­ãƒ¼ã‚«ãƒ«ãƒ‘ã‚¹ã‚’å–å¾—ã™ã‚‹
+' Resolve problem with ActiveDocument.Path returning URL in VBA on OneDrive.
 ' Get local path from open explorer.
 '
 ' Arguments: Nothing
 '
 ' Return Value:
-'   Local Path of ThisWorkbook (String)
+'   Local Path of ActiveDocument (String)
 '   Return null string if fails conversion from URL path to local path.
 '
 ' Usage:
 '   Dim lp As String
-'   lp = GetThisWorkbookLocalPath2
+'   lp = GetActiveDocumentLocalPath2
 '
 ' Author: Excel VBA Diary (@excelvba_diary)
 ' Created: December 11, 2023
@@ -24,33 +24,33 @@ Option Explicit
 ' License: MIT
 '-------------------------------------------------------------------------------
 
-Public Function GetThisWorkbookLocalPath2() As String
+Public Function GetActiveDocumentLocalPath2() As String
 
-    If Not ThisWorkbook.Path Like "http*" Then
-        GetThisWorkbookLocalPath2 = ThisWorkbook.Path
+    If Not ActiveDocument.Path Like "http*" Then
+        GetActiveDocumentLocalPath2 = ActiveDocument.Path
         Exit Function
     End If
     
-    'Šù‚Éæ“¾Ï‚İ‚Å‚ ‚ê‚ÎAæ“¾Ï‚İ‚Ì’l‚ğ•Ô‚·
+    'æ—¢ã«å–å¾—æ¸ˆã¿ã§ã‚ã‚Œã°ã€å–å¾—æ¸ˆã¿ã®å€¤ã‚’è¿”ã™
     'If it has already been retrieved, the retrieved value is returned.
     
     Static myLocalPathCache As String, lastUpdated As Date
     If myLocalPathCache <> "" And Now() - lastUpdated <= 30 / 86400 Then
-        GetThisWorkbookLocalPath2 = myLocalPathCache
+        GetActiveDocumentLocalPath2 = myLocalPathCache
         Exit Function
     End If
     
     Dim myLocalPath As String, urlFolderName As String, wObj As Object
     Dim tempArray As Variant, tempLocalPath As String, tempFolderName As String
     Select Case True
-        Case LCase(ThisWorkbook.Path) Like "https://d.docs.live.net/????????????????"
+        Case LCase(ActiveDocument.Path) Like "https://d.docs.live.net/????????????????"
             myLocalPath = Environ("OneDrive")
-        Case LCase(ThisWorkbook.Path) Like "https://*-my.sharepoint.com/personal/*/documents"
+        Case LCase(ActiveDocument.Path) Like "https://*-my.sharepoint.com/personal/*/documents"
             myLocalPath = Environ("OneDriveCommercial")
         Case Else
-            urlFolderName = Mid(ThisWorkbook.Path, InStrRev(ThisWorkbook.Path, "/") + 1)
-            '“ú–{Œê•â³
-            If LCase(urlFolderName) = "shared documents" Then urlFolderName = "ƒhƒLƒ…ƒƒ“ƒg"
+            urlFolderName = Mid(ActiveDocument.Path, InStrRev(ActiveDocument.Path, "/") + 1)
+            'æ—¥æœ¬èªè£œæ­£
+            If LCase(urlFolderName) = "shared documents" Then urlFolderName = "ãƒ‰ã‚­ãƒ¥ãƒ¡ãƒ³ãƒˆ"
             For Each wObj In CreateObject("Shell.Application").Windows
                 If LCase(wObj.FullName) Like "*explorer.exe" Then
                     tempLocalPath = DecodeURL_ASCII(wObj.LocationURL)
@@ -78,21 +78,21 @@ Public Function GetThisWorkbookLocalPath2() As String
     
     If myLocalPath = "" Then Exit Function
                 
-    'ÀÛ‚Éƒtƒ@ƒCƒ‹‚ª‘¶İ‚·‚é‚©Šm”F‚·‚é
+    'å®Ÿéš›ã«ãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã™ã‚‹ã‹ç¢ºèªã™ã‚‹
     'Verify that the file actually exists
     
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
-    If Not fso.FileExists(myLocalPath & "\" & ThisWorkbook.Name) Then Exit Function
+    If Not fso.FileExists(myLocalPath & "\" & ActiveDocument.Name) Then Exit Function
     myLocalPathCache = myLocalPath
     lastUpdated = Now()
-    GetThisWorkbookLocalPath2 = myLocalPathCache
+    GetActiveDocumentLocalPath2 = myLocalPathCache
 
 End Function
 
 
 '-------------------------------------------------------------------------------
-' ƒGƒ“ƒR[ƒh‚³‚ê‚½URL‚ğƒfƒR[ƒh‚·‚éiASCII•¶š‚Ì‚İj
+' ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‰ã•ã‚ŒãŸURLã‚’ãƒ‡ã‚³ãƒ¼ãƒ‰ã™ã‚‹ï¼ˆASCIIæ–‡å­—ã®ã¿ï¼‰
 ' Decode encoded URL (ASCII characters only)
 '-------------------------------------------------------------------------------
 Private Function DecodeURL_ASCII(ByVal URL As String) As String
@@ -111,11 +111,11 @@ End Function
 
 
 '-------------------------------------------------------------------------------
-' ƒGƒ“ƒR[ƒh‚³‚ê‚½URL‚ğƒfƒR[ƒh‚·‚éiENCODEURLŠÖ”‚Ì‹t•ÏŠ·j
+' ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‰ã•ã‚ŒãŸURLã‚’ãƒ‡ã‚³ãƒ¼ãƒ‰ã™ã‚‹ï¼ˆENCODEURLé–¢æ•°ã®é€†å¤‰æ›ï¼‰
 ' Decode encoded URL (reverse conversion of ENCODEURL function)
 
-' DecodeURL_ASCIIŠÖ”‚Ì‘ã‚í‚è‚É‚±‚ÌŠÖ”‚ğg‚¤ê‡‚Í
-' QÆİ’è‚ÅuMicrosoft HTML Object Libraryv‚ğƒ`ƒFƒbƒN‚·‚é‚±‚Æ.
+' DecodeURL_ASCIIé–¢æ•°ã®ä»£ã‚ã‚Šã«ã“ã®é–¢æ•°ã‚’ä½¿ã†å ´åˆã¯
+' å‚ç…§è¨­å®šã§ã€ŒMicrosoft HTML Object Libraryã€ã‚’ãƒã‚§ãƒƒã‚¯ã™ã‚‹ã“ã¨.
 ' If you use this function instead of the DecodeURL_ASCII function,
 ' Check the "Microsoft HTML Object Library" in the references dialog box.
 '-------------------------------------------------------------------------------
@@ -133,16 +133,16 @@ End Function
 
 
 '-------------------------------------------------------------------------------
-' ƒeƒXƒgƒR[ƒh
-' Test code for GetThisWorkbookLocalPath2
+' ãƒ†ã‚¹ãƒˆã‚³ãƒ¼ãƒ‰
+' Test code for GetActiveDocumentLocalPath2
 '-------------------------------------------------------------------------------
-Private Sub Test_GetThisWorkbookLocalPath2()
-    Debug.Print "URL Path", ThisWorkbook.Path
-    Debug.Print "Local Path", GetThisWorkbookLocalPath2
+Sub Test_GetActiveDocumentLocalPath2()
+    Debug.Print "URL Path", ActiveDocument.Path
+    Debug.Print "Local Path", GetActiveDocumentLocalPath2
 End Sub
 
 
 '-------------------------------------------------------------------------------
-' ‚±‚Ìƒ‚ƒWƒ…[ƒ‹‚Í‚±‚±‚ÅI‚í‚è
+' ã“ã®ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã¯ã“ã“ã§çµ‚ã‚ã‚Š
 ' The script for this module ends here
 '-------------------------------------------------------------------------------
